@@ -27,11 +27,14 @@
     "test": "mocha ./tests/index.js",
     "preversion": "npm test",
     "postversion": "npm publish",
-    "postpublish": "git push --follow-tags"
+    "postpublish": "git push --follow-tags",
+    "test:base": "mocha ./tests/index.js --reporter dot",
+    "test:cv": "nyc --reporter=lcov --reporter=text npm run test:base --timeout 60000"
   },
   "devDependencies": {
     "eslint": "^4.14.0",
-    "mocha": "^4.1.0"
+    "mocha": "^4.1.0",
+    "nyc": "^11.6.0"
   },
   "peerDependencies": {
     "eslint": ">= 3.0.0"
