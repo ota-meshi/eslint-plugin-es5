@@ -3,7 +3,7 @@
 module.exports = {
   meta: {
     docs: {
-      description: ''
+      description: 'Forbid Unicode RegExp.'
     },
     schema: []
   },
