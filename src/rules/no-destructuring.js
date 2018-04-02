@@ -1,11 +1,13 @@
 'use strict';
 
-
 function isSimpleAssignmentRight(node) {
   if (!node) {
     return false
   }
-  if (node.type === 'Identifier' || node.type === 'Literal' || node.type === 'ThisExpression') {
+  if (node.type === 'Literal') {
+    return node.value !== null
+  }
+  if (node.type === 'Identifier' || node.type === 'ThisExpression') {
     return true
   }
   if (node.type === 'MemberExpression') {
@@ -81,6 +83,30 @@ function getMapping(node) {
   return null
 }
 
+function noSideEffects(node) {
+  const parent = node.parent
+  if (!parent) {
+    return true
+  }
+  if (parent.type === 'CallExpression') {
+    // ex. console.log([x] = foo);
+    return false
+  }
+  if (parent.type === 'AssignmentExpression') {
+    // ex. ({ a, b } = ({ c, d } = foo));
+    return false
+  }
+  if (parent.type === 'VariableDeclaration' && parent.parent && parent.parent.type === 'ExportNamedDeclaration') {
+    // ex. export let {a, b, c} = foo;
+    return false
+  }
+  if (parent.type === 'ExportDefaultDeclaration') {
+    // ex. export default {a, b, c} = foo;
+    return false
+  }
+  return true
+}
+
 function isSimpleDestructuringAssignment(node) {
   if (!node) {
     return false
@@ -92,7 +118,7 @@ function isSimpleDestructuringAssignment(node) {
     if (!isSimpleAssignmentLeft(node.id)) {
       return false
     }
-    return true
+    return noSideEffects(node)
   } else if (node.type === 'AssignmentExpression') {
     if (!isSimpleAssignmentRight(node.right)) {
       return false
@@ -100,7 +126,7 @@ function isSimpleDestructuringAssignment(node) {
     if (!isSimpleAssignmentLeft(node.left)) {
       return false
     }
-    return true
+    return noSideEffects(node)
   }
   return false
 }
