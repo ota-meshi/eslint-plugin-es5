@@ -10,6 +10,20 @@ module.exports = {
   },
   create(context) {
     const sourceCode = context.getSourceCode()
+    function makeFunctionLongform(fixer, node) {
+        const firstKeyToken = node.computed ? sourceCode.getTokens(node).find(token => token.value === "[") : sourceCode.getFirstToken(node.key);
+        const lastKeyToken = node.computed ? sourceCode.getTokensBetween(node.key, node.value).find(token => token.value === "]") : sourceCode.getLastToken(node.key);
+        const keyText = sourceCode.text.slice(firstKeyToken.range[0], lastKeyToken.range[1]);
+        let functionHeader = "function";
+
+        if (node.value.generator) {
+            functionHeader = "function*";
+        } else if (node.value.async) {
+            functionHeader = "async function";
+        }
+
+        return fixer.replaceTextRange([node.range[0], lastKeyToken.range[1]], `${keyText}: ${functionHeader}`);
+    }
     return {
       Property(node) {
         if (node.shorthand || node.method) {
@@ -18,15 +32,7 @@ module.exports = {
             message: 'Unexpected object shorthand property.',
             fix: node.shorthand ?
               fixer => fixer.insertTextAfter(node.key, `: ${node.key.name}`) :
-              node.value.generator ? 
-              fixer => {
-                const asterisk = sourceCode.getTokens(node).find(token => token.type === 'Punctuator' && token.value === "*")
-                const text = sourceCode.text
-                const keyText = text.slice(node.range[0], asterisk.range[0]) + text.slice(asterisk.range[1], node.value.range[0])
-                const replacement = `${keyText}: ${node.value.async ? 'async ' : ''}function*`
-                return fixer.replaceTextRange([node.range[0], node.value.range[0]], replacement)
-              } :
-              fixer => fixer.insertTextBefore(node.value, `: ${node.value.async ? 'async ' : ''}function`)
+              fixer => makeFunctionLongform(fixer, node)
           });
         }
       }

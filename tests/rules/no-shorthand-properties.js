@@ -27,8 +27,14 @@ module.exports = {
       errors: [{ message: 'Unexpected object shorthand property.' }]
     },
     {
+      code: 'var foo = { async [bar]() {} };',
+      parserOptions: { ecmaVersion: 2018 },
+      output: 'var foo = { [bar]: async function() {} };',
+      errors: [{ message: 'Unexpected object shorthand property.' }]
+    },
+    {
       code: 'var foo = { /*1*/ * /*2*/ [ /*3*/ bar /*4*/ ] /*5*/ () /*6*/ { /*7*/ } /*8*/ };',
-      output: 'var foo = { /*1*/  /*2*/ [ /*3*/ bar /*4*/ ] /*5*/ : function*() /*6*/ { /*7*/ } /*8*/ };',
+      output: 'var foo = { /*1*/ [ /*3*/ bar /*4*/ ]: function* /*5*/ () /*6*/ { /*7*/ } /*8*/ };',
       errors: [{ message: 'Unexpected object shorthand property.' }]
     }
   ]
