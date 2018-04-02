@@ -14,16 +14,16 @@ module.exports = {
     {
       code:
         `
-        var obj = {
-          ["x" + foo]: "heh",
-          ["y" + bar]: "noo",
-          foo: "foo",
-          bar: "bar"
-        };
+var obj = {
+  ["x" + foo]: "heh",
+  ["y" + bar]: "noo",
+  foo: "foo",
+  bar: "bar"
+};
         `,
       output:
         `
-        var obj={};
+var obj={};
 obj["x" + foo]="heh";
 obj["y" + bar]="noo";
 obj['foo']="foo";
@@ -95,5 +95,35 @@ var b={};b[b1]=b2
       output: null,
       errors: [{ message: 'Unexpected computed property.' }]
     },
+    {
+      code: `var a = { [b]() {return c} }`,
+      output:`var a={};a[b]=function() {return c}`,
+      errors: [{ message: 'Unexpected computed property.' }]
+    },
+    {
+      code: `var a = ({ * [ foo ]() {} })`,
+      output:`var a={};a[foo]=function*() {}`,
+      errors: [{ message: 'Unexpected computed property.' }]
+    },
+    {
+      code: `var a = ({ async [ foo ]() {} })`,
+      parserOptions: { ecmaVersion: 2018 },
+      output:`var a={};a[foo]=async function() {}`,
+      errors: [{ message: 'Unexpected computed property.' }]
+    },
+//     {
+//       code: `
+// var obj4 = {
+//   async* f() {
+//    yield 1;
+//    yield 2;
+//    yield 3;
+//   }
+// };
+//       `,
+//       parserOptions: { ecmaVersion: 2018 },
+//       output:``,
+//       errors: [{ message: 'Unexpected computed property.' }]
+//     },
   ]
 };

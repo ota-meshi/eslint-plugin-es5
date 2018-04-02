@@ -75,7 +75,7 @@ function getPropertyKeyText(node, sourceCode) {
 function getPropertyValueText(node, sourceCode) {
   const value = node.value
   if (node.method) {
-    return `function${sourceCode.getText(value)}`
+    return `${value.async ? 'async ' : ''}function${value.generator ? '*' : ''}${sourceCode.getText(value)}`
   }
   return sourceCode.getText(value)
 }
