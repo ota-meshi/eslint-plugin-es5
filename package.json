@@ -29,7 +29,8 @@
     "postversion": "npm publish",
     "postpublish": "git push --follow-tags",
     "test:base": "mocha ./tests/index.js --reporter dot",
-    "test:cv": "nyc --reporter=lcov --reporter=text npm run test:base --timeout 60000"
+    "test:cv": "nyc --reporter=lcov --reporter=text npm run test:base --timeout 60000",
+    "test:doc": "node ./tools/test-readme.js"
   },
   "devDependencies": {
     "eslint": "^4.14.0",
