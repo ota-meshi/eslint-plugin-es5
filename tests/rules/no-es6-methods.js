@@ -54,6 +54,18 @@ var a = $()
 a = a.find(x => x == 3)
 a.find(x => x == 3)
     `,
+    {
+      code: 'v.find(array, x => x == 3);',
+      options: [{ ignoreNames: ['v'], ignoreNamePatterns: [] }],
+    },
+    {
+      code: 'v(array).find(x => x == 3);',
+      options: [{ ignoreNames: ['v'], ignoreNamePatterns: [] }],
+    },
+    {
+      code: 'v(array).filter(active => active).find(x => x == 3);',
+      options: [{ ignoreNames: ['v'], ignoreNamePatterns: [] }],
+    },
   ],
   invalid: [
     { code: '[1, 2, 3].find(x => x == 3);', errors: [{ message: 'ES6 methods not allowed: find' }] },
@@ -64,6 +76,23 @@ a.find(x => x == 3)
     { code: 'this[$array].find(array, x => x == 3);', errors: [{ message: 'ES6 methods not allowed: find' }] },
     { code: 'this[$array](array).find(x => x == 3);', errors: [{ message: 'ES6 methods not allowed: find' }] },
     { code: 'this[$array](array).filter(active => active).find(x => x == 3);', errors: [{ message: 'ES6 methods not allowed: find' }] },
+    // options
+    {
+      code: '$.find(array, x => x == 3);',
+      options: [{ ignoreNames: [], ignoreNamePatterns: [] }],
+      errors: [{ message: 'ES6 methods not allowed: find' }]
+    },
+    {
+      code: '$(array).find(x => x == 3);',
+      options: [{ ignoreNames: [], ignoreNamePatterns: [] }],
+      errors: [{ message: 'ES6 methods not allowed: find' }]
+    },
+    {
+      code: '$(array).filter(active => active).find(x => x == 3);',
+      options: [{ ignoreNames: [], ignoreNamePatterns: [] }],
+      errors: [{ message: 'ES6 methods not allowed: find' }]
+    },
+    // variables
     {
       code: `
 var a = get()
