@@ -1,43 +1,149 @@
 'use strict';
 
+function isIgnoreName(name, options) {
+  if (options.ignoreNamePatterns &&
+    options.ignoreNamePatterns.some(r => r.test(name))) {
+    return true
+  }
+  if (options.ignoreNames &&
+    options.ignoreNames.indexOf(name) >= 0) {
+    return true
+  }
+  return false
+}
+
+function isIgnore(node, variables, options, verified) {
+  verified = verified || []
+  if (!node) {
+    return false
+  }
+  if (verified.indexOf(node) >= 0) {
+    // ignore
+    return true
+  }
+  verified.push(node)
+  if (node.type === 'CallExpression') {
+    return isIgnore(node.callee, variables, options, verified)
+  }
+  if (node.type === 'MemberExpression') {
+    if (node.computed) {
+      return false
+    }
+    if (node.object.type === 'ThisExpression' && node.property.type === 'Identifier') {
+      return isIgnoreName(node.property.name, options)
+    }
+    return isIgnore(node.object, variables, options, verified)
+  }
+  if (node.type === 'Identifier') {
+    if (isIgnoreName(node.name, options)) {
+      return true
+    }
+    const roots = findVariableWriteExpressions(node, variables)
+    return (roots && roots.length) ? roots.every(node => isIgnore(node, variables, options, verified)) : false
+  }
+  return false
+}
+
+/**
+ * Find for expressions in which variables are written
+ * @param  {Identifier} node Identifier Node
+ * @param  {Variable[]} variables declared variables
+ * @return {Node[]} Reference#writeExpr list
+ */
+function findVariableWriteExpressions(node, variables) {
+  for (const variable of variables) {
+    const index = variable.references.findIndex(reference => reference.identifier === node)
+    if (index >= 0) {
+      return variable.references.map((reference, i) => {
+        if (index === i) {
+          return null
+        }
+        return reference.writeExpr
+      }).filter(writeExpr => writeExpr)
+    }
+  }
+  return null
+}
+
+function parseOptions (options) {
+  const opt = Object.assign({
+    'ignoreNames': ['_', '$', 'jQuery', 'jquery', 'JQuery'],
+    'ignoreNamePatterns': ['^\\$.*'],
+  }, options)
+
+  if (opt.ignoreNamePatterns && opt.ignoreNamePatterns.length) {
+    opt.ignoreNamePatterns = opt.ignoreNamePatterns.map(ptn => new RegExp(ptn));
+  }
+  return opt
+}
+
 module.exports = {
   meta: {
     docs: {
       description: 'Forbid methods added in ES6'
     },
-    schema: []
+    schema: [{
+      type: 'object',
+      properties: {
+        'ignoreNames': {
+          type: 'array',
+          items: {
+            allOf: [
+              { type: 'string' },
+            ]
+          },
+        },
+        'ignoreNamePatterns': {
+          type: 'array',
+          items: {
+            allOf: [
+              { type: 'string' },
+            ]
+          },
+        }
+      },
+      additionalProperties: false
+    }]
   },
   create(context) {
+    const options = parseOptions(context.options[0])
+    const variables = []
     return {
+      VariableDeclaration(node) {
+        context.getDeclaredVariables(node).forEach(n => variables.push(n))
+      },
       CallExpression(node) {
-        const objectExceptions = ['_'];
-        if(node.callee && node.callee.property && objectExceptions.indexOf(node.callee.object.name) === -1) {
-          const functionName = node.callee.property.name;
+        if (node.callee.type !== 'MemberExpression' || node.callee.computed || node.callee.property.type !== 'Identifier') {
+          return
+        }
+        const functionName = node.callee.property.name;
 
-          const es6ArrayFunctions = [
-            'find',
-            'findIndex',
-            'copyWithin',
-            'values',
-            'fill'
-          ];
-          const es6StringFunctions = [
-            'startsWith',
-            'endsWith',
-            'includes',
-            'repeat'
-          ];
+        const es6ArrayFunctions = [
+          'find',
+          'findIndex',
+          'copyWithin',
+          'values',
+          'fill'
+        ];
+        const es6StringFunctions = [
+          'startsWith',
+          'endsWith',
+          'includes',
+          'repeat'
+        ];
 
-          const es6Functions = [].concat(
-            es6ArrayFunctions,
-            es6StringFunctions
-          );
-          if(es6Functions.indexOf(functionName) > -1) {
-            context.report({
-              node: node.callee.property,
-              message: 'ES6 methods not allowed: ' + functionName
-            });
+        const es6Functions = [].concat(
+          es6ArrayFunctions,
+          es6StringFunctions
+        );
+        if(es6Functions.indexOf(functionName) > -1) {
+          if (isIgnore(node, variables, options)) {
+            return
           }
+          context.report({
+            node: node.callee.property,
+            message: 'ES6 methods not allowed: ' + functionName
+          });
         }
       }
     };
