@@ -23,6 +23,7 @@ function isIgnoreName(name, options) {
 function isIgnore(node, variables, options, verified) {
   verified = verified || []
   if (!node) {
+    // unknown name
     return false
   }
   if (verified.indexOf(node) >= 0) {
@@ -52,6 +53,7 @@ function isIgnore(node, variables, options, verified) {
     const roots = findVariableWriteExpressions(node, variables)
     return (roots && roots.length) ? roots.every(node => isIgnore(node, variables, options, verified)) : false
   }
+  // unknown name
   return false
 }
 
