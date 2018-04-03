@@ -1,33 +1,26 @@
 'use strict'
 const fs = require('fs')
 const path = require('path')
-
-const RULES_ROOT = path.resolve(__dirname, '../src/rules')
-const rules = fs.readdirSync(RULES_ROOT)
-  .filter(file => path.extname(file) === '.js')
-  .map(file => path.basename(file, '.js'))
-  .map(name => ({
-    ruleId: `es5/${name}`,
-    name,
-    meta: require(path.join(RULES_ROOT, name)).meta
-  }))
+const plugin = require('../src/index');
 
 const readmeFilePath = path.resolve(__dirname, '../README.md')
 const readmeText = fs.readFileSync(readmeFilePath, 'utf8')
 
 const readmeErrors = []
-rules.forEach((rule) => {
-  if (readmeText.indexOf(`\n  - \`${rule.ruleId}\``) < 0) {
-    readmeErrors.push(`There is no description of the \`${rule.ruleId}\` rule.
+Object.keys(plugin.rules).forEach((ruleName) => {
+  const ruleId = `es5/${ruleName}`
+  const rule = plugin.rules[ruleName]
+  if (readmeText.indexOf(`\n  - \`${ruleId}\``) < 0) {
+    readmeErrors.push(`There is no description of the \`${ruleId}\` rule.
 Please add as follows.
-  - \`${rule.ruleId}\`: description.`)
-  } else if (readmeText.indexOf(`\n  - \`${rule.ruleId}\`${rule.meta.fixable ? ':wrench:' : ''}:`) < 0) {
-    readmeErrors.push(`\`${rule.ruleId}\` rule does not match fixable.
+  - \`${ruleId}\`: description.`)
+  } else if (readmeText.indexOf(`\n  - \`${ruleId}\`${rule.meta.fixable ? ':wrench:' : ''}:`) < 0) {
+    readmeErrors.push(`\`${ruleId}\` rule does not match fixable.
 Please modify as follows.
-  - \`${rule.ruleId}\`${rule.meta.fixable ? ':wrench:' : ''}:`)
+  - \`${ruleId}\`${rule.meta.fixable ? ':wrench:' : ''}:`)
   }
   if (!rule.meta.docs || !rule.meta.docs.description) {
-    console.error(`Empty meta.docs.description. \`${rule.ruleId}\``)// eslint-disable-line
+    console.error(`Empty meta.docs.description. \`${ruleId}\``)// eslint-disable-line
   }
 })
 
