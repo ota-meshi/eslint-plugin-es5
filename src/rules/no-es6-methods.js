@@ -12,6 +12,14 @@ function isIgnoreName(name, options) {
   return false
 }
 
+/**
+ * It checks whether it is a Node which is not subject to verification
+ * @param  {Node} node Check target Node
+ * @param  {Variable[]} variables declared variables
+ * @param  {Object} options option
+ * @param  {Object} [verified] Array of verified Nodes
+ * @return {Boolean} is ignore
+ */
 function isIgnore(node, variables, options, verified) {
   verified = verified || []
   if (!node) {
@@ -27,10 +35,13 @@ function isIgnore(node, variables, options, verified) {
   }
   if (node.type === 'MemberExpression') {
     if (node.computed) {
+      // unknown name
       return false
     }
-    if (node.object.type === 'ThisExpression' && node.property.type === 'Identifier') {
-      return isIgnoreName(node.property.name, options)
+    if (node.property.type === 'Identifier') {
+      if (isIgnoreName(node.property.name, options)) {
+        return true
+      }
     }
     return isIgnore(node.object, variables, options, verified)
   }
@@ -68,7 +79,7 @@ function findVariableWriteExpressions(node, variables) {
 function parseOptions (options) {
   const opt = Object.assign({
     'ignoreNames': ['_', '$', 'jQuery', 'jquery', 'JQuery'],
-    'ignoreNamePatterns': ['^\\$.*'],
+    'ignoreNamePatterns': ['^\\$.*', '^_\\$.*'],
   }, options)
 
   if (opt.ignoreNamePatterns && opt.ignoreNamePatterns.length) {

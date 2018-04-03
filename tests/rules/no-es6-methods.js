@@ -15,11 +15,17 @@ module.exports = {
     'jQuery(array).find(x => x == 3);',
     'JQuery(array).filter(active => active).find(x => x == 3);',
     '$array.find(x => x == 3);',
-    '$array.find(x => x == 3);',
+    '$array().find(x => x == 3);',
     '$array.filter(active => active).find(x => x == 3);',
     'this.$array.find(x => x == 3);',
-    'this.$array.find(x => x == 3);',
+    'this.$array().find(x => x == 3);',
     'this.$array.filter(active => active).find(x => x == 3);',
+    'self.$array.find(x => x == 3);',
+    'self.$array().find(x => x == 3);',
+    'self.$array.filter(active => active).find(x => x == 3);',
+    'self._$array.find(x => x == 3);',
+    'self._$array().find(x => x == 3);',
+    'self._$array.filter(active => active).find(x => x == 3);',
     `
 var a = $(array)
 a.find(x => x == 3)
